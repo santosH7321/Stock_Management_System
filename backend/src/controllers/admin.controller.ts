@@ -58,8 +58,11 @@ export const createGuard = async (req: Request, res: Response) => {
       guard
     });
 
-  } catch {
-    res.status(500).json({ message: "Server error" });
-  }
+  } catch (error) {
+    res.status(500).json({
+        message: "Server error",
+        error
+    });
+    }
 };
 
