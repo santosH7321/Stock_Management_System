@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import Hostel from "../models/Hostel.model";
 import User from "../models/User.model";
 import bcrypt from "bcryptjs";
+import Item from "../models/Item.model";
+import mongoose from "mongoose";
 
 
 export const createHostel = async (req: Request, res: Response) => {
@@ -66,3 +68,29 @@ export const createGuard = async (req: Request, res: Response) => {
     }
 };
 
+export const createItem = async (req: Request, res: Response) => {
+  try {
+    const { itemName, hostelId, totalQuantity } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(hostelId)) {
+      return res.status(400).json({
+        message: "Invalid hostelId"
+      });
+    }
+
+    const item = await Item.create({
+      itemName,
+      hostelId,
+      totalQuantity,
+      availableQuantity: totalQuantity
+    });
+
+    res.status(201).json(item);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
+};
