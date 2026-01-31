@@ -4,13 +4,19 @@ import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Package, FileText, AlertTriangle } from "lucide-react";
+import Charts from "@/components/dashboard/Charts";
+
 
 export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
     api.get("/admin/stats").then((res) => {
       setStats(res.data.data);
+    });
+    api.get("/items").then((res) => {
+        setItems(res.data.data)
     });
   }, []);
 
@@ -24,7 +30,6 @@ export default function AdminPage() {
           </p>
         </div>
 
-        {/* Stats Grid */}
         {!stats ? (
           <div className="text-gray-400">Loading stats...</div>
         ) : (
@@ -49,7 +54,11 @@ export default function AdminPage() {
               icon={AlertTriangle}
               color="red"
             />
+            <div className="mt-8">
+                <Charts items={items} />
+            </div>
           </div>
+          
         )}
       </div>
     </DashboardLayout>
