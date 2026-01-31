@@ -9,9 +9,15 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
 
+
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3001",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(helmet());
 app.use(

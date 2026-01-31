@@ -26,8 +26,13 @@ export const login = async (req: Request, res: Response) => {
       { expiresIn: "7d" }
     );
 
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false 
+    });
+
     res.json({
-      token,
       user: {
         id: user._id,
         name: user.name,
@@ -35,6 +40,7 @@ export const login = async (req: Request, res: Response) => {
         hostelId: user.hostelId
       }
     });
+
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
