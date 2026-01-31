@@ -11,13 +11,20 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
+  try {
     const res = await api.post("/auth/login", { email, password });
 
-    localStorage.setItem("token", res.data.token);
+    const role = res.data.user.role;
 
-    if (res.data.user.role === "ADMIN") router.push("/admin");
-    else router.push("/guard");
-  };
+    router.replace(role === "ADMIN" ? "/admin" : "/guard");
+
+  } catch (err) {
+    alert("Invalid credentials");
+  }
+};
+
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-indigo-100 via-white to-blue-100 px-4">
@@ -31,6 +38,7 @@ export default function Login() {
 
             <input
                 type="email"
+                required
                 placeholder="Email address"
                 onChange={(e) => setEmail(e.target.value)}
                 className="
@@ -44,6 +52,7 @@ export default function Login() {
 
             <input
                 type="password"
+                required
                 placeholder="Password"
                 onChange={(e) => setPassword(e.target.value)}
                 className="
@@ -52,7 +61,7 @@ export default function Login() {
                 bg-white text-gray-600
                 focus:outline-none focus:ring-2 focus:ring-indigo-500
                 transition-all duration-200
-                "
+                "   
             />
 
             <button
