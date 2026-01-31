@@ -4,6 +4,8 @@ import User from "../models/User.model";
 import bcrypt from "bcryptjs";
 import Item from "../models/Item.model";
 import mongoose from "mongoose";
+import StockLogModel from "../models/StockLog.model";
+import ItemModel from "../models/Item.model";
 
 
 export const createHostel = async (req: Request, res: Response) => {
@@ -92,5 +94,25 @@ export const createItem = async (req: Request, res: Response) => {
     res.status(500).json({
       message: "Server error"
     });
+  }
+};
+
+export const getDashboardStats = async (req: Request, res: Response) => {
+  try {
+    const totalItems = await ItemModel.countDocuments();
+    const totalLogs = await StockLogModel.countDocuments();
+    const lowStock = await Item.countDocuments({
+      $expr: { $lte: ["$availableQuantity", "$minThreshold"] }
+    });
+
+    res.json({
+      totalItems,
+      totalLogs,
+      lowStock
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
