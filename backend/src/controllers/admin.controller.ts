@@ -106,9 +106,12 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
 
     res.json({
-      totalItems,
-      totalLogs,
-      lowStock
+      success: true,
+      data: {
+        totalItems,
+        totalLogs,
+        lowStock
+      }
     });
 
   } catch (error) {

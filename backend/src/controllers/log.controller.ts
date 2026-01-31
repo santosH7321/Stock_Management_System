@@ -23,7 +23,10 @@ export const getLogs = async (req: Request, res: Response) => {
       .populate("changedBy", "name role")
       .sort({ createdAt: -1 });
 
-    res.json(logs);
+    res.json({
+      success: true,
+      data: logs
+    });
 
   } catch (error) {
     console.error(error);

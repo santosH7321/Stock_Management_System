@@ -30,9 +30,13 @@ const itemSchema = new mongoose.Schema(
     minThreshold: {
       type: Number,
       default: 5
-    }
+    },
   },
   { timestamps: true }
 );
+
+itemSchema.index({ hostelId: 1 });
+itemSchema.index({ itemName: 1 });
+
 
 export default mongoose.model<IItem>("Item", itemSchema);

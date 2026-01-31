@@ -46,5 +46,7 @@ const stockLogSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+stockLogSchema.index({ createdAt: -1 });
+stockLogSchema.index({ hostelId: 1 });
 
 export default mongoose.model<IStockLog>("StockLog", stockLogSchema);
