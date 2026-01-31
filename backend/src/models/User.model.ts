@@ -27,14 +27,17 @@ const userSchema = new mongoose.Schema<IUser>(
     role: { 
         type: String, 
         enum: ["ADMIN", "GUARD"], 
-        required: true },
+        required: true 
+    },
     hostelId: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: "Hostel", 
-        default: null },
+        default: null 
+    },
     isActive: { 
         type: Boolean, 
-        default: true }
+        default: true 
+    }
   },
   { timestamps: true }
 );
