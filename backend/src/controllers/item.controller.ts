@@ -1,29 +1,25 @@
-import { Request, Response } from "express";
+import { Response } from "express";
+import { AuthRequest } from "../middlewares/auth.middleware";
 import ItemModel from "../models/Item.model";
 
-export const getItems = async (req: Request, res: Response) => {
+export const getItems = async (req: AuthRequest, res: Response) => {
   try {
-    const page = Math.max(Number(req.query.page) || 1, 1);     // ✅ minimum page is 1
-    const limit = Math.min(Number(req.query.limit) || 10, 100); // ✅ max limit is 100
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
     const search = (req.query.search as string)?.trim();
 
-    // ✅ Whitelist sort fields — prevents field injection
     const allowedSortFields = ["createdAt", "itemName", "availableQuantity", "totalQuantity"];
     const sort = allowedSortFields.includes(req.query.sort as string)
       ? (req.query.sort as string)
       : "createdAt";
 
     const skip = (page - 1) * limit;
-
-    // ✅ isActive: true by default — never return disabled items
     let filter: Record<string, any> = { isActive: true };
 
-    // ✅ GUARD only sees their hostel's items
     if (req.user.role === "GUARD") {
       filter.hostelId = req.user.hostelId;
     }
 
-    // ✅ ADMIN can filter by specific hostel
     if (req.user.role === "ADMIN" && req.query.hostelId) {
       filter.hostelId = req.query.hostelId;
     }
@@ -32,14 +28,13 @@ export const getItems = async (req: Request, res: Response) => {
       filter.itemName = { $regex: search, $options: "i" };
     }
 
-    // ✅ Run both queries in parallel — faster response
     const [items, total] = await Promise.all([
       ItemModel.find(filter)
-        .populate("hostelId", "name code")  // ✅ Added code field
+        .populate("hostelId", "name code")
         .sort({ [sort]: -1 })
         .skip(skip)
         .limit(limit)
-        .lean(),                            // ✅ .lean() — returns plain JS object, faster
+        .lean(),
       ItemModel.countDocuments(filter)
     ]);
 
@@ -57,7 +52,7 @@ export const getItems = async (req: Request, res: Response) => {
   }
 };
 
-export const getItemById = async (req: Request, res: Response) => {
+export const getItemById = async (req: AuthRequest, res: Response) => {
   try {
     const item = await ItemModel.findById(req.params.id)
       .populate("hostelId", "name code")
@@ -82,7 +77,7 @@ export const getItemById = async (req: Request, res: Response) => {
   }
 };
 
-export const getLowStockItems = async (req: Request, res: Response) => {
+export const getLowStockItems = async (req: AuthRequest, res: Response) => {
   try {
     let filter: Record<string, any> = {
       isActive: true,

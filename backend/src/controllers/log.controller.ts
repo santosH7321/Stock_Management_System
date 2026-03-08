@@ -1,7 +1,8 @@
-import {Request, Response } from "express";
+import { Response } from "express";
+import { AuthRequest } from "../middlewares/auth.middleware";
 import StockLog from "../models/StockLog.model";
 
-export const getLogs = async (req: Request, res: Response) => {
+export const getLogs = async (req: AuthRequest, res: Response) => {
   try {
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Number(req.query.limit) || 20, 100);
