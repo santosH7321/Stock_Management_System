@@ -1,8 +1,7 @@
-import { Response } from "express";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { Request, Response } from "express";
 import ItemModel from "../models/Item.model";
 
-export const getItems = async (req: AuthRequest, res: Response) => {
+export const getItems = async (req: Request, res: Response) => {
   try {
     const page = Math.max(Number(req.query.page) || 1, 1);     // ✅ minimum page is 1
     const limit = Math.min(Number(req.query.limit) || 10, 100); // ✅ max limit is 100
@@ -58,7 +57,7 @@ export const getItems = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getItemById = async (req: AuthRequest, res: Response) => {
+export const getItemById = async (req: Request, res: Response) => {
   try {
     const item = await ItemModel.findById(req.params.id)
       .populate("hostelId", "name code")
@@ -83,7 +82,7 @@ export const getItemById = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getLowStockItems = async (req: AuthRequest, res: Response) => {
+export const getLowStockItems = async (req: Request, res: Response) => {
   try {
     let filter: Record<string, any> = {
       isActive: true,

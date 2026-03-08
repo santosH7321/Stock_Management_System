@@ -1,10 +1,9 @@
-import { Response } from "express";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { Request, Response } from "express";
 import Item from "../models/Item.model";
 import StockLog from "../models/StockLog.model";
 import mongoose from "mongoose";
 
-export const updateStock = async (req: AuthRequest, res: Response) => {
+export const updateStock = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
