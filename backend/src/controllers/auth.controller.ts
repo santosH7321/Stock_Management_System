@@ -2,25 +2,21 @@ import { Request, Response } from "express";
 import User from "../models/User.model";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { AuthRequest } from "../middlewares/auth.middleware";
 
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
     const user = await User.findOne({
-      email: email.toLowerCase(),
+      email: email.toLowerCase().trim(),
       isActive: true
     }).select("+password");
 
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    if (!user.password) {
+    if (!user || !user.password) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -40,13 +36,15 @@ export const login = async (req: Request, res: Response) => {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000 
     });
 
-    return res.json({
+    return res.status(200).json({
+      success: true,
       user: {
         id: user._id,
         name: user.name,
+        email: user.email,
         role: user.role,
         hostelId: user.hostelId
       }
@@ -59,19 +57,23 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const logout = (_req: Request, res: Response) => {
-  res.clearCookie("token");
-  return res.json({ message: "Logged out successfully" });
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production"
+  });
+  return res.status(200).json({ success: true, message: "Logged out successfully" });
 };
 
-export const getMe = async (req: Request, res: Response) => {
+export const getMe = async (req: AuthRequest, res: Response) => {
   try {
-    const user = await User.findById((req as any).user.id);
+    const user = await User.findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    return res.json({ user });
+    return res.status(200).json({ success: true, user });
 
   } catch (error) {
     console.error("GetMe error:", error);
