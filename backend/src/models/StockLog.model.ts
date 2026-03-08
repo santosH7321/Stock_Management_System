@@ -9,44 +9,69 @@ export interface IStockLog extends Document {
   quantity: number;
   beforeQty: number;
   afterQty: number;
-  remark: string;
+  remark?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const stockLogSchema = new mongoose.Schema(
+const stockLogSchema = new mongoose.Schema<IStockLog>(
   {
     itemId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Item",
-      required: true
+      required: true,
     },
     hostelId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hostel",
-      required: true
+      required: true,
     },
     changedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
     role: {
       type: String,
       enum: ["ADMIN", "GUARD"],
-      required: true
+      required: true,
     },
     action: {
       type: String,
       enum: ["INCREASE", "DECREASE"],
-      required: true
+      required: true,
     },
-    quantity: Number,
-    beforeQty: Number,
-    afterQty: Number,
-    remark: String
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    beforeQty: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    afterQty: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    remark: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    versionKey: false,
+  }
 );
-stockLogSchema.index({ createdAt: -1 });
-stockLogSchema.index({ hostelId: 1 });
+
+stockLogSchema.index({ hostelId: 1, createdAt: -1 });
+
+stockLogSchema.index({ itemId: 1, createdAt: -1 });
+
+stockLogSchema.index({ changedBy: 1, createdAt: -1 });
 
 export default mongoose.model<IStockLog>("StockLog", stockLogSchema);
