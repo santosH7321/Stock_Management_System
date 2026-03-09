@@ -1,4 +1,4 @@
-import { Router, RequestHandler } from "express";
+import { Router } from "express";
 import { protect, isAdminOrGuard } from "../middlewares/auth.middleware";
 import {
   getItems,

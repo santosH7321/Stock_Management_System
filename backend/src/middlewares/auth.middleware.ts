@@ -11,6 +11,19 @@ export interface AuthRequest extends Request {
   user: IUserPayload;
 }
 
+const getTokenFromCookieHeader = (cookieHeader?: string) => {
+  if (!cookieHeader) return null;
+
+  const tokenCookie = cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith("token="));
+
+  if (!tokenCookie) return null;
+
+  return decodeURIComponent(tokenCookie.slice("token=".length));
+};
+
 export const protect = ((
   req: AuthRequest,
   res: Response,
@@ -21,7 +34,10 @@ export const protect = ((
       return res.status(500).json({ message: "Server configuration error" });
     }
 
-    const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
+    const authHeaderToken = req.headers.authorization?.startsWith("Bearer ")
+      ? req.headers.authorization.split(" ")[1]
+      : null;
+    const token = getTokenFromCookieHeader(req.headers.cookie) || authHeaderToken;
 
     if (!token) {
       return res.status(401).json({ message: "Not authorized, no token" });

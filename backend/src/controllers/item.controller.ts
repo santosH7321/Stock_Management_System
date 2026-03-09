@@ -14,6 +14,10 @@ export const getItems = async (req: AuthRequest, res: Response) => {
       : "createdAt";
 
     const skip = (page - 1) * limit;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 904cbc0 (backend + frontend)
     let filter: Record<string, any> = { isActive: true };
 
     if (req.user.role === "GUARD") {
