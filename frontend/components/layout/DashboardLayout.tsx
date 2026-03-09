@@ -29,17 +29,17 @@ interface DashboardLayoutProps {
 }
 
 const adminMenu: NavItem[] = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "Items", href: "/admin/items", icon: Boxes },
-  { name: "Logs", href: "/admin/logs", icon: FileText },
-  { name: "Guards", href: "/admin/guards", icon: Shield },
+  { name: "Dashboard", href: "/admin",         icon: LayoutDashboard },
+  { name: "Hostels",   href: "/admin/hostels", icon: Building2       },
+  { name: "Guards",    href: "/admin/guards",  icon: Shield          },
+  { name: "Items",     href: "/admin/items",   icon: Boxes           },
+  { name: "Logs",      href: "/admin/logs",    icon: FileText        },
 ];
 
 const guardMenu: NavItem[] = [
   { name: "Dashboard", href: "/guard", icon: LayoutDashboard },
   { name: "Items", href: "/guard/items", icon: Boxes },
   { name: "Logs", href: "/guard/logs", icon: FileText },
-  { name: "Guards", href: "/admin/guards", icon: Shield },
 ];
 
 const pageTitles: Record<string, string> = {
