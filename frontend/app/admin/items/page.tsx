@@ -1,126 +1,288 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/axios";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StockModal from "@/components/ui/StockModal";
-import { Search } from "lucide-react";
+import {
+  Search,
+  AlertTriangle,
+  RefreshCw,
+  Package,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { IItem } from "@/lib/types";
 
-export default function ItemsPage() {
-  const [items, setItems] = useState<any[]>([]);
+// ✅ Unit badge colors
+const unitColors: Record<string, string> = {
+  KG: "bg-blue-50 text-blue-600",
+  LITRE: "bg-cyan-50 text-cyan-600",
+  PIECE: "bg-purple-50 text-purple-600",
+  PACKET: "bg-orange-50 text-orange-600",
+  BOX: "bg-green-50 text-green-600",
+};
+
+// ✅ Stock status helper
+const stockStatus = (item: IItem) => {
+  if (item.availableQuantity === 0)
+    return { label: "Out of Stock", class: "bg-red-50 text-red-600" };
+  if (item.availableQuantity <= item.minThreshold)
+    return { label: "Low Stock", class: "bg-amber-50 text-amber-600" };
+  return { label: "In Stock", class: "bg-green-50 text-green-600" };
+};
+
+export default function AdminItemsPage() {
+  const [items, setItems] = useState<IItem[]>([]);         // ✅ typed
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selected, setSelected] = useState<IItem | null>(null); // ✅ full item
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
+  const fetchItems = useCallback(
+    async (p: number, showRefresh = false) => {
+      if (showRefresh) setRefreshing(true);
+      else setLoading(true);
 
-  useEffect(() => {
-    api.get("/items").then((res) => {
-      setItems(res.data.data);
-      setLoading(false);
-    });
-  }, []);
+      try {
+        // ✅ Backend search + pagination
+        const params = new URLSearchParams({
+          page: String(p),
+          limit: "10",
+          ...(search && { search }),
+        });
 
-  const filteredItems = items.filter((item) =>
-    item.itemName.toLowerCase().includes(search.toLowerCase())
+        const res = await api.get(`/items?${params}`);
+        setItems(res.data.data);
+        setTotalPages(res.data.pages);
+        setTotal(res.data.total);
+      } catch (err) {
+        console.error("Failed to fetch items", err);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [search]
   );
 
+  // ✅ Refetch when page or search changes
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      fetchItems(page);
+    }, 300); // ✅ Debounce search
+
+    return () => clearTimeout(timeout);
+  }, [page, search, fetchItems]);
+
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <DashboardLayout role="ADMIN">
+      <div className="space-y-5 max-w-6xl">
+
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Items Inventory</h1>
-          <div className="relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-3 text-gray-400"
-            />
-            <input
-              placeholder="Search items..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white shadow-sm"
-            />
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+              Items Inventory
+            </h1>
+            <p className="text-sm text-gray-400 mt-0.5">
+              {total} items across all hostels
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* ✅ Search input */}
+            <div className="relative">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                placeholder="Search items..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1); // ✅ Reset to page 1 on search
+                }}
+                className="pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white w-56"
+              />
+            </div>
+
+            {/* ✅ Refresh button */}
+            <button
+              onClick={() => fetchItems(page, true)}
+              disabled={refreshing}
+              className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition"
+            >
+              <RefreshCw
+                size={15}
+                className={refreshing ? "animate-spin" : ""}
+              />
+            </button>
           </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-lg border overflow-hidden">
 
+        {/* Table */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
           {loading ? (
-            <div className="p-10 text-center text-gray-400">
-              Loading items...
+            <div className="p-12 text-center">
+              <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin mx-auto mb-3" />
+              <p className="text-sm text-gray-400">Loading items...</p>
             </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="p-10 text-center text-gray-400">
-              No items found
+          ) : items.length === 0 ? (
+            // ✅ Empty state
+            <div className="p-12 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
+                <Package size={20} className="text-gray-300" />
+              </div>
+              <p className="text-sm font-medium text-gray-500">No items found</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {search
+                  ? "Try a different search term"
+                  : "No items have been added yet"}
+              </p>
             </div>
           ) : (
-            <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-600">
-                    <tr>
-                    <th className="text-left px-6 py-4 font-semibold">Item</th>
-                    <th className="text-left px-6 py-4 font-semibold">Hostel</th>
-                    <th className="text-left px-6 py-4 font-semibold">Available</th>
-                    <th className="text-left px-6 py-4 font-semibold">Action</th>
-                    </tr>
+            <>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-50">
+                    {["Item", "Hostel", "Unit", "Total", "Available", "Status", "Action"].map(
+                      (h) => (
+                        <th
+                          key={h}
+                          className="text-left px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wide"
+                        >
+                          {h}
+                        </th>
+                      )
+                    )}
+                  </tr>
                 </thead>
 
-                <tbody>
-                    {filteredItems.map((item) => (
-                    <tr
+                <tbody className="divide-y divide-gray-50">
+                  {items.map((item) => {
+                    const status = stockStatus(item);
+                    return (
+                      <tr
                         key={item._id}
-                        className="border-t hover:bg-indigo-50/40 transition"
-                    >
-                        <td className="px-6 py-4 font-medium text-gray-800">
-                        {item.itemName}
-                        </td>
-                        
-                        <td className="px-6 py-4 text-gray-600">
-                        {item.hostelId.name}
+                        className="hover:bg-gray-50/50 transition-colors"
+                      >
+                        {/* Item Name */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                              <Package size={14} className="text-blue-500" />
+                            </div>
+                            <span className="font-medium text-gray-800">
+                              {item.itemName}
+                            </span>
+                          </div>
                         </td>
 
+                        {/* Hostel */}
+                        <td className="px-6 py-4 text-gray-500">
+                          {item.hostelId?.name ?? "—"}
+                        </td>
+
+                        {/* ✅ Unit badge */}
                         <td className="px-6 py-4">
-                        <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold
-                            ${
-                                item.availableQuantity > 5
-                                ? "bg-green-100 text-green-700"
-                                : item.availableQuantity > 0
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-red-100 text-red-700"
+                          <span
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                              unitColors[item.unit] ?? "bg-gray-50 text-gray-600"
                             }`}
-                        >
-                            {item.availableQuantity}
-                        </span>
+                          >
+                            {item.unit}
+                          </span>
                         </td>
 
+                        {/* Total Quantity */}
+                        <td className="px-6 py-4 text-gray-500">
+                          {item.totalQuantity}
+                        </td>
+
+                        {/* Available */}
                         <td className="px-6 py-4">
-                        <button
-                            onClick={() => setSelected(item._id)}
-                            className="
-                            px-4 py-1.5 rounded-lg
-                            bg-indigo-600 text-white text-xs font-semibold
-                            hover:bg-indigo-700
-                            shadow-sm hover:shadow-md
-                            transition active:scale-95
-                            "
-                        >
-                            Update
-                        </button>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-800">
+                              {item.availableQuantity}
+                            </span>
+                            {/* ✅ Warning icon for low stock */}
+                            {item.availableQuantity <= item.minThreshold && (
+                              <AlertTriangle
+                                size={13}
+                                className="text-amber-400"
+                              />
+                            )}
+                          </div>
                         </td>
-                    </tr>
-                    ))}
-                </tbody>
-            </table>
 
+                        {/* Status badge */}
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium ${status.class}`}
+                          >
+                            {status.label}
+                          </span>
+                        </td>
+
+                        {/* Action */}
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => setSelected(item)} // ✅ full item
+                            className="px-4 py-1.5 rounded-lg bg-[#0C0E14] hover:bg-[#1a1d27] text-white text-xs font-medium transition-all"
+                          >
+                            Update
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* ✅ Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-50">
+                  <p className="text-xs text-gray-400">
+                    Page {page} of {totalPages} · {total} items
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <button
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={page === totalPages}
+                      className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
+
+      {/* ✅ StockModal gets full item object */}
       {selected && (
         <StockModal
-            itemId={selected}
-            onClose={() => setSelected(null)}
-            onSuccess={() => window.location.reload()}
+          item={selected}
+          onClose={() => setSelected(null)}
+          onSuccess={() => fetchItems(page, true)} // ✅ No page reload
         />
-        )}
+      )}
     </DashboardLayout>
   );
 }
