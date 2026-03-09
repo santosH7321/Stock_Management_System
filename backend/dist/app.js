@@ -30,14 +30,20 @@ const configuredOrigins = [
     .map((origin) => origin.trim())
     .filter(Boolean);
 const allowedOrigins = new Set([...defaultAllowedOrigins, ...configuredOrigins]);
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       if (!origin || allowedOrigins.has(origin)) {
+//         callback(null, true);
+//         return;
+//       }
+//       callback(new Error("CORS: origin not allowed"));
+//     },
+//     credentials: true,
+//   })
+// );
 app.use((0, cors_1.default)({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.has(origin)) {
-            callback(null, true);
-            return;
-        }
-        callback(new Error("CORS: origin not allowed"));
-    },
+    origin: "http://localhost:3000",
     credentials: true,
 }));
 app.use(express_1.default.json());
