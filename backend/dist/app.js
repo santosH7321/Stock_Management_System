@@ -14,6 +14,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const rateLimit_middleware_1 = require("./middlewares/rateLimit.middleware");
 const app = (0, express_1.default)();
 const defaultAllowedOrigins = [
+    "*",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",

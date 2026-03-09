@@ -11,6 +11,7 @@ import { globalLimiter } from "./middlewares/rateLimit.middleware";
 const app = express();
 
 const defaultAllowedOrigins = [
+  "*",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
   "http://localhost:3001",
@@ -29,15 +30,21 @@ const configuredOrigins = [
 
 const allowedOrigins = new Set([...defaultAllowedOrigins, ...configuredOrigins]);
 
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       if (!origin || allowedOrigins.has(origin)) {
+//         callback(null, true);
+//         return;
+//       }
+//       callback(new Error("CORS: origin not allowed"));
+//     },
+//     credentials: true,
+//   })
+// );
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.has(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error("CORS: origin not allowed"));
-    },
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
