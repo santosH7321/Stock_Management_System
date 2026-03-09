@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Loader2,
+  Shield,
 } from "lucide-react";
 
 interface NavItem {
@@ -31,12 +32,14 @@ const adminMenu: NavItem[] = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Items", href: "/admin/items", icon: Boxes },
   { name: "Logs", href: "/admin/logs", icon: FileText },
+  { name: "Guards", href: "/admin/guards", icon: Shield },
 ];
 
 const guardMenu: NavItem[] = [
   { name: "Dashboard", href: "/guard", icon: LayoutDashboard },
   { name: "Items", href: "/guard/items", icon: Boxes },
   { name: "Logs", href: "/guard/logs", icon: FileText },
+  { name: "Guards", href: "/admin/guards", icon: Shield },
 ];
 
 const pageTitles: Record<string, string> = {

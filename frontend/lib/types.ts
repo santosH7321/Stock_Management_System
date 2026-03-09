@@ -10,11 +10,15 @@ export interface IHostel {
 }
 
 export interface IUser {
+  _id: string;
   id: string;
   name: string;
   email: string;
   role: "ADMIN" | "GUARD";
-  hostelId?: string | null;
+  hostelId?: string | IHostel | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IItem {
